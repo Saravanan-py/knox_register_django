@@ -149,6 +149,7 @@ REST_KNOX = {
     # This defines if the token expiry time is extended by TOKEN_TTL each time the token is used.
 }
 AUTH_USER_MODEL = 'knox_app.CustomUser'
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587  # or the appropriate port for your SMTP server

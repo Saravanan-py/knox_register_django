@@ -20,6 +20,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 import random
 import string
+from key_generator.key_generator import generate
 
 
 def generate_otp():
@@ -27,13 +28,13 @@ def generate_otp():
 
 
 def generate_license_key(length):
-    characters = string.digits
-    license_key = ''.join(random.choice(characters) for _ in range(length))
-    return license_key
+    key = generate(seed=101)
+    key = key.get_key()
+    return key
 
 
 def send_otp_email(email, otp, license_key):
-    subject = 'Your OTP for Login'
+    subject = 'OTP and License Key for Login'
     message = f'Your OTP is: {otp} and Your license key is: {license_key}'
     from_email = settings.EMAIL_HOST_USER
     recipient_list = [email]
@@ -54,32 +55,32 @@ class Email_API(CreateAPIView):
                 Verification.objects.create(company_mail=email, otp=otp, license_key=license)
                 send_otp_email(email, otp, license)
                 data = {
-                    'Response Code': status.HTTP_201_CREATED,
-                    'Status': 'TRUE',
-                    'Message': 'User email has been posted successfully',
-                    "Error": 'None',
-                    "StatusFlag": True,
-                    'Data': serializer.data,
+                    'response_code': status.HTTP_201_CREATED,
+                    "status": 'SUCCESS',
+                    "message": 'User email has been posted successfully',
+                    "errorDetails": 'None',
+                    "statusFlag": True,
+                    "data": serializer.data,
                 }
                 return Response(data)
             else:
                 data = {
-                    'Response Code': status.HTTP_400_BAD_REQUEST,
-                    'Status': 'FALSE',
-                    'Message': 'User email is incorrect',
-                    "Error": serializer.errors,
-                    "StatusFlag": False,
-                    'Data': [],
+                    'response_code': status.HTTP_400_BAD_REQUEST,
+                    "status": "FAILED",
+                    "message": 'User email is incorrect',
+                    "errorDetails": serializer.errors,
+                    "statusFlag": False,
+                    "data": [],
                 }
                 return Response(data)
         except Exception as e:
             data = {
-                'Response Code': status.HTTP_500_INTERNAL_SERVER_ERROR,
-                'Status': 'FALSE',
-                'Message': 'Sending Process is failed',
-                "Error": str(e),
-                "StatusFlag": False,
-                'Data': [],
+                'response_code': status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "status": "FAILED",
+                "message": 'Sending Process is failed',
+                "errorDetails": str(e),
+                "statusFlag": False,
+                "data": [],
             }
             return Response(data)
 
@@ -95,32 +96,32 @@ class OTPCheck_API(CreateAPIView):
                 otp = Verification.objects.filter(otp=user_otp)
                 if otp:
                     data = {
-                        'Response Code': status.HTTP_201_CREATED,
-                        'Status': 'TRUE',
-                        'Message': 'OTP is Verified',
-                        "Error": 'None',
-                        "StatusFlag": True,
-                        'Data': serializer.data,
+                        'response_code': status.HTTP_201_CREATED,
+                        "status": 'SUCCESS',
+                        "message": 'OTP is Verified',
+                        "errorDetails": 'None',
+                        "statusFlag": True,
+                        "data": serializer.data,
                     }
                     return Response(data)
                 else:
                     data = {
-                        'Response Code': status.HTTP_400_BAD_REQUEST,
-                        'Status': 'FALSE',
-                        'Message': 'Check Your OTP',
-                        "Error": serializer.errors,
-                        "StatusFlag": False,
-                        'Data': [],
+                        'response_code': status.HTTP_400_BAD_REQUEST,
+                        "status": "FAILED",
+                        "message": 'Check Your OTP',
+                        "errorDetails": serializer.errors,
+                        "statusFlag": False,
+                        "data": [],
                     }
                     return Response(data)
         except Exception as e:
             data = {
-                'Response Code': status.HTTP_500_INTERNAL_SERVER_ERROR,
-                'Status': 'FALSE',
-                'Message': 'Process is failed',
-                "Error": str(e),
-                "StatusFlag": False,
-                'Data': [],
+                'response_code': status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "status": "FAILED",
+                "message": 'Process is failed',
+                "errorDetails": str(e),
+                "statusFlag": False,
+                "data": [],
             }
             return Response(data)
 
@@ -136,32 +137,32 @@ class LicenseCheck_API(CreateAPIView):
                 license_key = Verification.objects.filter(license_key=license)
                 if license_key:
                     data = {
-                        'Response Code': status.HTTP_201_CREATED,
-                        'Status': 'TRUE',
-                        'Message': 'License is Verified',
-                        "Error": 'None',
-                        "StatusFlag": True,
-                        'Data': serializer.data,
+                        'response_code': status.HTTP_201_CREATED,
+                        "status": 'SUCCESS',
+                        "message": 'License is Verified',
+                        "errorDetails": 'None',
+                        "statusFlag": True,
+                        "data": serializer.data,
                     }
                     return Response(data)
                 else:
                     data = {
-                        'Response Code': status.HTTP_400_BAD_REQUEST,
-                        'Status': 'FALSE',
-                        'Message': 'Check Your License',
-                        "Error": serializer.errors,
-                        "StatusFlag": False,
-                        'Data': [],
+                        'response_code': status.HTTP_400_BAD_REQUEST,
+                        "status": "FAILED",
+                        "message": 'Check Your License',
+                        "errorDetails": serializer.errors,
+                        "statusFlag": False,
+                        "data": [],
                     }
                     return Response(data)
         except Exception as e:
             data = {
-                'Response Code': status.HTTP_500_INTERNAL_SERVER_ERROR,
-                'Status': 'FALSE',
-                'Message': 'Process is failed',
-                "Error": str(e),
-                "StatusFlag": False,
-                'Data': [],
+                'response_code': status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "status": "FAILED",
+                "message": 'Process is failed',
+                "errorDetails": str(e),
+                "statusFlag": False,
+                "data": [],
             }
             return Response(data)
 
@@ -178,32 +179,32 @@ class RegisterUser(CreateAPIView):
                 serializer_class.validated_data['password'] = hpass
                 serializer_class.save()
                 data = {
-                    'Response Code': status.HTTP_201_CREATED,
-                    'Status': 'TRUE',
-                    'Message': 'User Details Created Successfully',
-                    "Error": 'None',
-                    "StatusFlag": True,
-                    'Data': serializer_class.data,
+                    'response_code': status.HTTP_201_CREATED,
+                    "status": 'SUCCESS',
+                    "message": 'User Details Created Successfully',
+                    "errorDetails": None,
+                    "statusFlag": True,
+                    "data": serializer_class.data,
                 }
                 return Response(data)
             else:
                 data = {
-                    'Response Code': status.HTTP_400_BAD_REQUEST,
-                    'Status': 'FALSE',
-                    'Message': 'Incorrect Details',
-                    "Error": serializer_class.errors,
-                    "StatusFlag": False,
-                    'Data': [],
+                    'response_code': status.HTTP_400_BAD_REQUEST,
+                    "status": "FAILED",
+                    "message": 'Incorrect Details',
+                    "errorDetails": serializer.errors,
+                    "statusFlag": False,
+                    "data": [],
                 }
                 return Response(data)
         except Exception as e:
             data = {
-                'Response Code': status.HTTP_500_INTERNAL_SERVER_ERROR,
-                'Status': 'FALSE',
-                'Message': 'Creating Process is failed',
-                "Error": str(e),
-                "StatusFlag": False,
-                'Data': [],
+                'response_code': status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "status": "FAILED",
+                "message": 'Creating Process is failed',
+                "errorDetails": str(e),
+                "statusFlag": False,
+                "data": [],
             }
             return Response(data)
 
@@ -222,32 +223,32 @@ class LoginAPI(knox_views.LoginView, CreateAPIView):
                 login(request, user)
                 response = super().post(request, format=None)
                 data = {
-                    'Response Code': status.HTTP_201_CREATED,
-                    'Status': 'TRUE',
-                    'Message': 'User Details Created Successfully',
-                    "Error": 'None',
-                    "StatusFlag": True,
-                    'Data': {"token": response.data['token']},
+                    "response_code": status.HTTP_201_CREATED,
+                    "message": 'User Details Created Successfully',
+                    "statusFlag": True,
+                    "status": "SUCCESS",
+                    "errorDetails": 'None',
+                    "data": {"token": response.data['token']},
                 }
                 return Response(data)
             else:
                 data = {
-                    'Response Code': status.HTTP_400_BAD_REQUEST,
-                    'Status': 'FALSE',
-                    'Message': 'Incorrect Details',
-                    "Error": serializer.errors,
-                    "StatusFlag": False,
-                    'Data': [],
+                    "response_code": status.HTTP_400_BAD_REQUEST,
+                    "message": 'Incorrect Details',
+                    "statusFlag": False,
+                    "status": 'FAILED',
+                    "errorDetails": serializer.errors,
+                    "data": [],
                 }
                 return Response(data)
 
         except Exception as e:
             data = {
-                'Response Code': status.HTTP_500_INTERNAL_SERVER_ERROR,
-                'Status': 'FALSE',
-                'Message': 'Login Process is failed',
-                "Error": str(e),
-                "StatusFlag": False,
-                'Data': [],
+                "response_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "message": 'Login Process is failed',
+                "status": "FAILED",
+                "errorDetails": str(e),
+                "statusFlag": False,
+                "data": [],
             }
             return Response(data)
